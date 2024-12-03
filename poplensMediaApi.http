@@ -1,0 +1,6 @@
+@poplensMediaApi_HostAddress = http://localhost:5128
+
+GET {{poplensMediaApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
