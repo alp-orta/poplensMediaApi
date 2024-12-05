@@ -53,7 +53,9 @@ namespace poplensMediaApi.Services {
                             TotalReviews = 0, 
                             Description = movie.Overview,
                             Director = director ?? "Unknown",
-                            Type = "film"
+                            Type = "film",
+                            CreatedDate = DateTime.UtcNow,
+                            LastUpdatedDate = DateTime.UtcNow
                         };
 
                         moviesToInsert.Add(media);
@@ -106,7 +108,9 @@ namespace poplensMediaApi.Services {
                         TotalReviews = 0,
                         Description = movie.Overview,
                         Director = director ?? "Unknown",
-                        Type = "film"
+                        Type = "film",
+                        CreatedDate = DateTime.UtcNow,
+                        LastUpdatedDate = DateTime.UtcNow
                     };
                     if (media.CachedImagePath != null) {
                         moviesToInsert.Add(media);
@@ -164,7 +168,9 @@ namespace poplensMediaApi.Services {
                             TotalReviews = 0,
                             Description = movie.Overview,
                             Director = director ?? "Unknown",
-                            Type = "film"
+                            Type = "film",
+                            CreatedDate = DateTime.UtcNow,
+                            LastUpdatedDate = DateTime.UtcNow
                         };
                         if (media.CachedImagePath != null) {
                             moviesToInsert.Add(media);
@@ -241,7 +247,9 @@ namespace poplensMediaApi.Services {
                         TotalReviews = 0,
                         Description = movie.Overview,
                         Director = director ?? "Unknown",
-                        Type = "film"
+                        Type = "film",
+                        CreatedDate = DateTime.UtcNow,
+                        LastUpdatedDate = DateTime.UtcNow
                     };
                     if (media.CachedImagePath != null) {
                         moviesToInsert.Add(media);
@@ -287,7 +295,9 @@ namespace poplensMediaApi.Services {
                         TotalReviews = 0,
                         Description = movie.Overview,
                         Director = director ?? "Unknown",
-                        Type = "film"
+                        Type = "film",
+                        CreatedDate = DateTime.UtcNow,
+                        LastUpdatedDate = DateTime.UtcNow
                     };
                     if (media.CachedImagePath != null) {
                         moviesToInsert.Add(media);

@@ -13,7 +13,10 @@ namespace poplensMediaApi.Services {
 
         public async Task<Media> CreateMedia(Media media) {
             media.Id = Guid.NewGuid();
+            media.AvgRating = 0; // Initialize to 0
             media.TotalReviews = 0; // Initialize to 0
+            media.CreatedDate = DateTime.Now;
+            media.LastUpdatedDate = DateTime.Now;
             _context.Media.Add(media);
             await _context.SaveChangesAsync();
             return media;
@@ -40,10 +43,11 @@ namespace poplensMediaApi.Services {
             media.AvgRating = updatedMedia.AvgRating;
             media.TotalReviews = updatedMedia.TotalReviews;
             media.Description = updatedMedia.Description;
-            media.Type = updatedMedia.Type; // Update type
+            media.Type = updatedMedia.Type;
             media.Director = updatedMedia.Director;
             media.Writer = updatedMedia.Writer;
             media.Publisher = updatedMedia.Publisher;
+            media.LastUpdatedDate = DateTime.Now;
 
             await _context.SaveChangesAsync();
             return true;
@@ -58,9 +62,15 @@ namespace poplensMediaApi.Services {
             return true;
         }
 
+        /// <summary>
+        /// query for media by title, director, writer, or publisher
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         public async Task<IEnumerable<Media>> SearchMedia(string query) {
             return await _context.Media
-                .Where(m => m.Title.Contains(query) || m.Description.Contains(query))
+                .Where(m => m.Title.Contains(query) || (m.Director != null && m.Director.Contains(query)) 
+                || (m.Writer != null && m.Writer.Contains(query)) || (m.Publisher != null && m.Publisher.Contains(query)))
                 .ToListAsync();
         }
     }
