@@ -28,6 +28,13 @@ namespace poplensMediaApi.Controllers {
 
             return Ok($"{insertedCount} games have been added successfully.");
         }
+
+        [HttpPost("FetchPopularGames")]
+        public async Task<IActionResult> FetchPopularGames([FromQuery] int limit = 100, [FromQuery] int offset = 0) {
+            var games = await _gameService.FetchPopularGamesAsync(limit, offset);
+            return Ok(games);
+        }
+
     }
 
 

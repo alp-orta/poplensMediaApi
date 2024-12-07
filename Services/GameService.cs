@@ -6,6 +6,7 @@ using poplensMediaApi.Models;
 using poplensMediaApi.Contracts;
 using RestEase.Implementation;
 using TMDbLib.Objects.Movies;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace poplensMediaApi.Services {
     public class GameService : IGameService {
         private readonly IGDBClient _igdbClient;
@@ -85,6 +86,87 @@ namespace poplensMediaApi.Services {
 
             return newInserted;
         }
+
+        public async Task<int> FetchPopularGamesAsync(int limit = 100, int offset = 0) {
+
+            // IGDB Query for popular games
+            var query =
+    $"fields id, name, first_release_date, genres.name, " +
+    $"involved_companies.company.name, involved_companies.publisher, " +
+    $"summary, cover.image_id, rating, rating_count; " +
+    $"where rating > 75 & rating_count > 50 & first_release_date != null & genres != null; " +
+    $"sort rating_count desc; " +
+    $"limit {limit}; " +
+    $"offset {offset};";
+
+
+
+
+            try {
+                // Execute the query
+                var popularGames = await _igdbClient.QueryAsync<Game>("games", query);
+                if (popularGames == null || popularGames.Length == 0) {
+                    Console.WriteLine("No popular games found.");
+                    return 0;
+                }
+
+                // Fetch existing game IDs
+                var existingGameIds = await _context.Media
+                    .Where(m => m.Type == "game")
+                    .Select(m => m.CachedExternalId)
+                    .ToListAsync();
+
+                // Prepare media objects for new games
+                var mediaList = new List<Media>();
+                foreach (var game in popularGames) {
+                    if (existingGameIds.Contains(game.Id.ToString())) continue;
+
+                    // Convert genres
+                    var genreNames = game.Genres.Values?
+                        .Select(g => g.Name)
+                        .Where(name => !string.IsNullOrEmpty(name))
+                        .ToList();
+
+                    // Extract publisher
+                    var publisher = game.InvolvedCompanies?.Values?
+                        .FirstOrDefault(ic => ic.Company != null && ic.Publisher == true)?.Company?.Value;
+
+
+                    // Map to Media entity
+                    var media = new Media {
+                        Id = Guid.NewGuid(),
+                        Title = game.Name,
+                        PublishDate = game.FirstReleaseDate.HasValue
+                            ? (game.FirstReleaseDate.Value).UtcDateTime
+                            : DateTime.UtcNow,
+                        Genre = string.Join(", ", genreNames),
+                        CachedExternalId = game.Id.ToString(),
+                        CachedImagePath = game.Cover?.Value?.ImageId != null
+                            ? $"/{game.Cover.Value.ImageId}.jpg"
+                            : null,
+                        AvgRating = game.Rating ?? 0,
+                        TotalReviews = (int)(game.RatingCount ?? 0),
+                        Description = game.Summary,
+                        Director = publisher?.Name ?? "Unknown",
+                        Type = "game"
+                    };
+
+                    if (!string.IsNullOrEmpty(media.CachedImagePath))
+                        mediaList.Add(media);
+                }
+
+                // Save to the database
+                await _context.Media.AddRangeAsync(mediaList);
+                await _context.SaveChangesAsync();
+
+                return mediaList.Count;
+            } catch (Exception ex) {
+                Console.WriteLine($"Error fetching popular games: {ex.Message}");
+                return 0;
+            }
+        }
+
+
 
     }
 
