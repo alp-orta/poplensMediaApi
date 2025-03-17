@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using poplensMediaApi.Contracts;
-using poplensMediaApi.Models;
+using poplensMediaApi.Models.Game;
 using poplensMediaApi.Services;
 
-namespace poplensMediaApi.Controllers {
+namespace poplensMediaApi.Controllers
+{
     [ApiController]
     [Route("api/[controller]")]
     public class GameController : ControllerBase {

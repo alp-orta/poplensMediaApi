@@ -18,6 +18,7 @@ builder.Services.AddSingleton<IGDBClient>(provider => new IGDBClient(
     clientId: "7ggnncnbidv2kboz18m5p0tgpr1o5c",
     clientSecret: "ldajb2z5anralfd2n3isowkg3ohdf2"
 ));
+builder.Services.AddHttpClient<IBookService, BookService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

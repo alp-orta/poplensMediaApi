@@ -58,11 +58,38 @@ namespace poplensMediaApi.Controllers {
         }
 
         // Search for media by title or description
-        [HttpGet("search")]
+        [HttpGet("SearchMedia")]
         public async Task<IActionResult> SearchMedia([FromQuery] string query) {
             if (string.IsNullOrEmpty(query)) return BadRequest("Query parameter is required.");
 
             var mediaList = await _mediaService.SearchMedia(query);
+            return Ok(mediaList);
+        }
+
+        // Search for films by title or description
+        [HttpGet("SearchFilms")]
+        public async Task<IActionResult> SearchFilms([FromQuery] string query) {
+            if (string.IsNullOrEmpty(query)) return BadRequest("Query parameter is required.");
+
+            var mediaList = await _mediaService.SearchFilms(query);
+            return Ok(mediaList);
+        }
+
+        // Search for books by title or description
+        [HttpGet("SearchBooks")]
+        public async Task<IActionResult> SearchBooks([FromQuery] string query) {
+            if (string.IsNullOrEmpty(query)) return BadRequest("Query parameter is required.");
+
+            var mediaList = await _mediaService.SearchBooks(query);
+            return Ok(mediaList);
+        }
+
+        // Search for games by title or description
+        [HttpGet("SearchGames")]
+        public async Task<IActionResult> SearchGames([FromQuery] string query) {
+            if (string.IsNullOrEmpty(query)) return BadRequest("Query parameter is required.");
+
+            var mediaList = await _mediaService.SearchGames(query);
             return Ok(mediaList);
         }
 

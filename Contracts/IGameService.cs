@@ -1,6 +1,7 @@
-﻿using poplensMediaApi.Models;
+﻿using poplensMediaApi.Models.Game;
 
-namespace poplensMediaApi.Contracts {
+namespace poplensMediaApi.Contracts
+{
     public interface IGameService {
         Task<int> FetchGamesAsync(GameFetchRequest request);
 

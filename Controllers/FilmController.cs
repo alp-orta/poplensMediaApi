@@ -38,8 +38,6 @@ namespace poplensMediaApi.Controllers {
             return Ok(yearCount);
         }
 
-
-
         /// <summary>
         /// Fetch and store movies by release year.
         /// </summary>

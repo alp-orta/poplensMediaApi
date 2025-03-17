@@ -1,5 +1,7 @@
-﻿namespace poplensMediaApi.Models {
-    public class GameFetchRequest {
+﻿namespace poplensMediaApi.Models.Game
+{
+    public class GameFetchRequest
+    {
         public int? ReleaseYear { get; set; }
         public string? Genre { get; set; }
         public string? Publisher { get; set; }

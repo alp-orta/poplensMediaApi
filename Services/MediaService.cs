@@ -63,14 +63,60 @@ namespace poplensMediaApi.Services {
         }
 
         /// <summary>
-        /// query for media by title, director, writer, or publisher
+        /// Query for media by title, director, writer, or publisher
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
         public async Task<IEnumerable<Media>> SearchMedia(string query) {
+            string lowerQuery = query.ToLower();
             return await _context.Media
-                .Where(m => m.Title.Contains(query) || (m.Director != null && m.Director.Contains(query)) 
-                || (m.Writer != null && m.Writer.Contains(query)) || (m.Publisher != null && m.Publisher.Contains(query)))
+                .Where(m => m.Title.ToLower().Contains(lowerQuery)
+                            || (m.Director != null && m.Director.ToLower().Contains(lowerQuery))
+                            || (m.Writer != null && m.Writer.ToLower().Contains(lowerQuery))
+                            || (m.Publisher != null && m.Publisher.ToLower().Contains(lowerQuery)))
+                .Take(15)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Query for films by title or director
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Media>> SearchFilms(string query) {
+            string lowerQuery = query.ToLower();
+            return await _context.Media
+                .Where(m => m.Type == "film" && (m.Title.ToLower().Contains(lowerQuery)
+                            || (m.Director != null && m.Director.ToLower().Contains(lowerQuery))))
+                .Take(15)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Query for books by title or writer
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Media>> SearchBooks(string query) {
+            string lowerQuery = query.ToLower();
+            return await _context.Media
+                .Where(m => m.Type == "book" && (m.Title.ToLower().Contains(lowerQuery)
+                            || (m.Writer != null && m.Writer.ToLower().Contains(lowerQuery))))
+                .Take(15)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Query for games by title or publisher
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Media>> SearchGames(string query) {
+            string lowerQuery = query.ToLower();
+            return await _context.Media
+                .Where(m => m.Type == "game" && (m.Title.ToLower().Contains(lowerQuery)
+                            || (m.Publisher != null && m.Publisher.ToLower().Contains(lowerQuery))))
+                .Take(15)
                 .ToListAsync();
         }
     }
