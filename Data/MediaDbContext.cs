@@ -1,8 +1,6 @@
 ﻿namespace poplensMediaApi.Data {
     using Microsoft.EntityFrameworkCore;
     using poplensMediaApi.Models;
-    using System.Collections.Generic;
-    using System.Reflection.Emit;
 
     public class MediaDbContext : DbContext {
         public MediaDbContext(DbContextOptions<MediaDbContext> options) : base(options) { }

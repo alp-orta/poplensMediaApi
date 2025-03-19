@@ -4,12 +4,8 @@ using IGDB.Models;
 using Microsoft.EntityFrameworkCore;
 using poplensMediaApi.Models;
 using poplensMediaApi.Contracts;
-using RestEase.Implementation;
-using TMDbLib.Objects.Movies;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using poplensMediaApi.Models.Game;
-namespace poplensMediaApi.Services
-{
+namespace poplensMediaApi.Services {
     public class GameService : IGameService {
         private readonly IGDBClient _igdbClient;
         private readonly MediaDbContext _context;

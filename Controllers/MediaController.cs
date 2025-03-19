@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using poplensMediaApi.Contracts;
-using poplensMediaApi.Data;
 using poplensMediaApi.Models;
 
 namespace poplensMediaApi.Controllers {
@@ -32,6 +31,7 @@ namespace poplensMediaApi.Controllers {
         }
 
         // Get a single media item by ID
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMediaById(Guid id) {
             var media = await _mediaService.GetMediaById(id);
@@ -58,6 +58,7 @@ namespace poplensMediaApi.Controllers {
         }
 
         // Search for media by title or description
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [HttpGet("SearchMedia")]
         public async Task<IActionResult> SearchMedia([FromQuery] string query) {
             if (string.IsNullOrEmpty(query)) return BadRequest("Query parameter is required.");
@@ -67,6 +68,7 @@ namespace poplensMediaApi.Controllers {
         }
 
         // Search for films by title or description
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [HttpGet("SearchFilms")]
         public async Task<IActionResult> SearchFilms([FromQuery] string query) {
             if (string.IsNullOrEmpty(query)) return BadRequest("Query parameter is required.");
@@ -76,6 +78,7 @@ namespace poplensMediaApi.Controllers {
         }
 
         // Search for books by title or description
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [HttpGet("SearchBooks")]
         public async Task<IActionResult> SearchBooks([FromQuery] string query) {
             if (string.IsNullOrEmpty(query)) return BadRequest("Query parameter is required.");
@@ -85,6 +88,7 @@ namespace poplensMediaApi.Controllers {
         }
 
         // Search for games by title or description
+        [Authorize(AuthenticationSchemes = "Bearer")]
         [HttpGet("SearchGames")]
         public async Task<IActionResult> SearchGames([FromQuery] string query) {
             if (string.IsNullOrEmpty(query)) return BadRequest("Query parameter is required.");

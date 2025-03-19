@@ -1,8 +1,4 @@
 ﻿using TMDbLib.Client;
-using TMDbLib.Objects.Movies;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
 using poplensMediaApi.Data;
 using poplensMediaApi.Models;
 using poplensMediaApi.Contracts;
