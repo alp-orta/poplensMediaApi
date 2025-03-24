@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using poplensMediaApi.Contracts;
 using poplensMediaApi.Models;
+using poplensMediaApi.Models.Common;
 
 namespace poplensMediaApi.Controllers {
     [ApiController]
@@ -95,6 +96,28 @@ namespace poplensMediaApi.Controllers {
 
             var mediaList = await _mediaService.SearchGames(query);
             return Ok(mediaList);
+        }
+
+        [Authorize(AuthenticationSchemes = "Bearer")]
+        [HttpGet("GetMediaWithFilters")]
+        public async Task<IActionResult> GetMediaWithFilters(
+            [FromQuery] string mediaType,
+            [FromQuery] string? decade,
+            [FromQuery] string? genre,
+            [FromQuery] string? sortBy,
+            [FromQuery] string? query,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10) {
+
+            var media = await _mediaService.GetMediaWithFilters(mediaType, decade, genre, sortBy, query, page, pageSize);
+            var totalItems = await _mediaService.GetTotalMediaCount(mediaType, decade, genre, query);
+            var pagedResult = new PageResult<Media> {
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalItems,
+                Result = media.ToList()
+            };
+            return Ok(pagedResult);
         }
 
         private bool IsValidType(string type) {

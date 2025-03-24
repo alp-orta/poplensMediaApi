@@ -12,6 +12,8 @@ namespace poplensMediaApi.Contracts {
         Task<IEnumerable<Media>> SearchFilms(string query);
         Task<IEnumerable<Media>> SearchBooks(string query);
         Task<IEnumerable<Media>> SearchGames(string query);
+        Task<IEnumerable<Media>> GetMediaWithFilters(string mediaType, string? decade, string? genre, string? sortBy, string? query, int page, int pageSize);
+        Task<int> GetTotalMediaCount(string mediaType, string? decade, string? genre, string? query);
     }
 
 }

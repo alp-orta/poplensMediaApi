@@ -10,6 +10,13 @@ namespace poplensMediaApi.Services {
         public MediaService(MediaDbContext context) {
             _context = context;
         }
+        public async Task<IEnumerable<Media>> GetAllMedia() {
+            return await _context.Media.ToListAsync();
+        }
+
+        public async Task<Media?> GetMediaById(Guid id) {
+            return await _context.Media.FindAsync(id);
+        }
 
         public async Task<Media> CreateMedia(Media media) {
             media.Id = Guid.NewGuid();
@@ -20,14 +27,6 @@ namespace poplensMediaApi.Services {
             _context.Media.Add(media);
             await _context.SaveChangesAsync();
             return media;
-        }
-
-        public async Task<IEnumerable<Media>> GetAllMedia() {
-            return await _context.Media.ToListAsync();
-        }
-
-        public async Task<Media?> GetMediaById(Guid id) {
-            return await _context.Media.FindAsync(id);
         }
 
         public async Task<bool> UpdateMedia(Guid id, Media updatedMedia) {
@@ -118,6 +117,88 @@ namespace poplensMediaApi.Services {
                             || (m.Publisher != null && m.Publisher.ToLower().Contains(lowerQuery))))
                 .Take(15)
                 .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Media>> GetMediaWithFilters(string mediaType, string? decade, string? genre, string? sortBy, string? query, int page, int pageSize) {
+            var mediaQuery = _context.Media.AsQueryable();
+
+            // Filter by media type
+            mediaQuery = mediaQuery.Where(m => m.Type == mediaType);
+
+            // Filter by decade
+            if (!string.IsNullOrEmpty(decade)) {
+                int startYear = int.Parse(decade);
+                int endYear = startYear + 9;
+                mediaQuery = mediaQuery.Where(m => m.PublishDate.Year >= startYear && m.PublishDate.Year <= endYear);
+            }
+
+            // Filter by genre
+            if (!string.IsNullOrEmpty(genre)) {
+                mediaQuery = mediaQuery.Where(m => m.Genre.ToLower().Contains(genre.ToLower()));
+            }
+
+            // Filter by query
+            if (!string.IsNullOrEmpty(query)) {
+                string lowerQuery = query.ToLower();
+                mediaQuery = mediaQuery.Where(m => m.Title.ToLower().Contains(lowerQuery)
+                            || (m.Director != null && m.Director.ToLower().Contains(lowerQuery))
+                            || (m.Writer != null && m.Writer.ToLower().Contains(lowerQuery))
+                            || (m.Publisher != null && m.Publisher.ToLower().Contains(lowerQuery)));
+            }
+
+            // Sort by
+            switch (sortBy) {
+                case "rating-high":
+                    mediaQuery = mediaQuery.OrderByDescending(m => m.AvgRating);
+                    break;
+                case "rating-low":
+                    mediaQuery = mediaQuery.OrderBy(m => m.AvgRating);
+                    break;
+                case "comments-high":
+                    mediaQuery = mediaQuery.OrderByDescending(m => m.TotalReviews);
+                    break;
+                case "comments-low":
+                    mediaQuery = mediaQuery.OrderBy(m => m.TotalReviews);
+                    break;
+                default:
+                    mediaQuery = mediaQuery.OrderBy(m => m.Title);
+                    break;
+            }
+
+            // Pagination
+            mediaQuery = mediaQuery.Skip((page - 1) * pageSize).Take(pageSize);
+
+            return await mediaQuery.ToListAsync();
+        }
+
+        public async Task<int> GetTotalMediaCount(string mediaType, string? decade, string? genre, string? query) {
+            var mediaQuery = _context.Media.AsQueryable();
+
+            // Filter by media type
+            mediaQuery = mediaQuery.Where(m => m.Type == mediaType);
+
+            // Filter by decade
+            if (!string.IsNullOrEmpty(decade)) {
+                int startYear = int.Parse(decade);
+                int endYear = startYear + 9;
+                mediaQuery = mediaQuery.Where(m => m.PublishDate.Year >= startYear && m.PublishDate.Year <= endYear);
+            }
+
+            // Filter by genre
+            if (!string.IsNullOrEmpty(genre)) {
+                mediaQuery = mediaQuery.Where(m => m.Genre.ToLower().Contains(genre.ToLower()));
+            }
+
+            // Filter by query
+            if (!string.IsNullOrEmpty(query)) {
+                string lowerQuery = query.ToLower();
+                mediaQuery = mediaQuery.Where(m => m.Title.ToLower().Contains(lowerQuery)
+                            || (m.Director != null && m.Director.ToLower().Contains(lowerQuery))
+                            || (m.Writer != null && m.Writer.ToLower().Contains(lowerQuery))
+                            || (m.Publisher != null && m.Publisher.ToLower().Contains(lowerQuery)));
+            }
+
+            return await mediaQuery.CountAsync();
         }
     }
 
