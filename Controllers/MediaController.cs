@@ -50,6 +50,15 @@ namespace poplensMediaApi.Controllers {
             return NoContent();
         }
 
+        [HttpPost("IncrementTotalReviewCount/{id}")]
+        public async Task<IActionResult> IncrementTotalReviewCount(Guid id) {
+            var result = await _mediaService.IncrementTotalReviewCount(id);
+            if (!result) {
+                return NotFound(new { Message = "Media not found." });
+            }
+            return Ok(new { Message = "Review count incremented successfully." });
+        }
+
         // Delete a media item by ID
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMedia(Guid id) {

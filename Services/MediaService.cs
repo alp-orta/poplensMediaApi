@@ -52,6 +52,15 @@ namespace poplensMediaApi.Services {
             return true;
         }
 
+        public async Task<bool> IncrementTotalReviewCount(Guid id) {
+            var media = await _context.Media.FindAsync(id);
+            if (media == null) return false;
+
+            media.TotalReviews++;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> DeleteMedia(Guid id) {
             var media = await _context.Media.FindAsync(id);
             if (media == null) return false;

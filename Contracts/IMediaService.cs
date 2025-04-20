@@ -7,6 +7,7 @@ namespace poplensMediaApi.Contracts {
         Task<IEnumerable<Media>> GetAllMedia();
         Task<Media?> GetMediaById(Guid id);
         Task<bool> UpdateMedia(Guid id, Media updatedMedia);
+        Task<bool> IncrementTotalReviewCount(Guid id);
         Task<bool> DeleteMedia(Guid id);
         Task<IEnumerable<Media>> SearchMedia(string query);
         Task<IEnumerable<Media>> SearchFilms(string query);
