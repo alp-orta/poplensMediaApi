@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Pgvector;
+using Pgvector.EntityFrameworkCore;
 using poplensMediaApi.Contracts;
 using poplensMediaApi.Data;
 using poplensMediaApi.Models;
@@ -6,16 +8,43 @@ using poplensMediaApi.Models;
 namespace poplensMediaApi.Services {
     public class MediaService : IMediaService {
         private readonly MediaDbContext _context;
+        private readonly IEmbeddingProxyService _embeddingProxyService;
 
-        public MediaService(MediaDbContext context) {
+        public MediaService(MediaDbContext context, IEmbeddingProxyService embeddingProxyService) {
             _context = context;
-        }
-        public async Task<IEnumerable<Media>> GetAllMedia() {
-            return await _context.Media.ToListAsync();
+            _embeddingProxyService = embeddingProxyService;
         }
 
         public async Task<Media?> GetMediaById(Guid id) {
-            return await _context.Media.FindAsync(id);
+            // Exclude the Embedding property
+            return await _context.Media
+                .Where(m => m.Id == id)
+                .Select(m => new Media {
+                    Id = m.Id,
+                    Title = m.Title,
+                    PublishDate = m.PublishDate,
+                    Genre = m.Genre,
+                    CachedExternalId = m.CachedExternalId,
+                    CachedImagePath = m.CachedImagePath,
+                    AvgRating = m.AvgRating,
+                    TotalReviews = m.TotalReviews,
+                    Description = m.Description,
+                    Type = m.Type,
+                    Director = m.Director,
+                    Writer = m.Writer,
+                    Publisher = m.Publisher,
+                    CreatedDate = m.CreatedDate,
+                    LastUpdatedDate = m.LastUpdatedDate
+                    // Embedding is intentionally excluded
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        // New method to get media with embedding
+        public async Task<Media?> GetMediaWithEmbeddingById(Guid id) {
+            return await _context.Media
+                .Where(m => m.Id == id)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<Media> CreateMedia(Media media) {
@@ -209,6 +238,84 @@ namespace poplensMediaApi.Services {
 
             return await mediaQuery.CountAsync();
         }
-    }
 
+        public async Task<List<Media>> GetSimilarMediaAsync(
+    Vector embedding,
+    int count,
+    string? mediaType = null,
+    List<Guid>? excludedMediaIds = null) {
+            Console.WriteLine($"[GetSimilarMediaAsync] Called with count={count}, mediaType={mediaType}, excludedMediaIds.Count={excludedMediaIds?.Count ?? 0}");
+
+            // Debug embedding
+            var embeddingArray = embedding?.ToArray();
+            Console.WriteLine($"[GetSimilarMediaAsync] Embedding is {(embeddingArray == null ? "null" : $"length {embeddingArray.Length}")}");
+            if (embeddingArray != null && embeddingArray.Length > 0)
+                Console.WriteLine($"[GetSimilarMediaAsync] Embedding sample: [{string.Join(", ", embeddingArray.Take(5))}...]");
+
+            var query = _context.Media
+                .Where(m => m.Embedding != null);
+
+            Console.WriteLine("[GetSimilarMediaAsync] Initial query: Media with non-null embedding");
+
+            if (!string.IsNullOrEmpty(mediaType)) {
+                query = query.Where(m => m.Type == mediaType);
+                Console.WriteLine($"[GetSimilarMediaAsync] Filtered by mediaType: {mediaType}");
+            }
+
+            if (excludedMediaIds != null && excludedMediaIds.Any()) {
+                query = query.Where(m => !excludedMediaIds.Contains(m.Id));
+                Console.WriteLine($"[GetSimilarMediaAsync] Excluding {excludedMediaIds.Count} media IDs");
+            }
+
+            var result = await query
+                .OrderBy(m => m.Embedding.CosineDistance(embedding))
+                .Take(count)
+                .ToListAsync();
+
+            Console.WriteLine($"[GetSimilarMediaAsync] Returning {result.Count} results");
+
+            return result;
+        }
+
+
+
+
+
+        /// <summary>
+        /// Updates all media records that are missing embeddings.
+        /// </summary>
+        /// <returns>The number of media records updated.</returns>
+        public async Task<int> UpdateMissingMediaEmbeddingsAsync() {
+            const int batchSize = 10000;
+            int updatedCount = 0;
+
+            while (true) {
+                // Fetch the next batch of media without embeddings
+                var batch = await _context.Media
+                    .Where(m => m.Embedding == null)
+                    .OrderBy(m => m.Id)
+                    .Take(batchSize)
+                    .ToListAsync();
+
+                if (batch.Count == 0)
+                    break;
+
+                foreach (var media in batch) {
+                    var embeddingInput = $"Type: {media.Type}; Title: {media.Title}; Genre: {media.Genre}; Description: {media.Description};";
+                    var embedding = await _embeddingProxyService.GetEmbeddingAsync(embeddingInput);
+
+                    if (embedding != null) {
+                        media.Embedding = embedding;
+                        media.LastUpdatedDate = DateTime.UtcNow;
+                        updatedCount++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            return updatedCount;
+        }
+
+    }
 }

@@ -4,13 +4,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using poplensMediaApi.Contracts;
 using poplensMediaApi.Data;
+using poplensMediaApi.Helpers;
 using poplensMediaApi.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => {
+    options.JsonSerializerOptions.Converters.Add(new VectorJsonConverter());
+}); ;
 builder.Services.AddDbContext<MediaDbContext>(options =>
     options.UseNpgsql("Host=postgresMedia;Port=5432;Username=postgre;Password=postgre;Database=Media"));
 
@@ -22,6 +26,7 @@ builder.Services.AddSingleton<IGDBClient>(provider => new IGDBClient(
     clientSecret: "ldajb2z5anralfd2n3isowkg3ohdf2"
 ));
 builder.Services.AddHttpClient<IBookService, BookService>();
+builder.Services.AddScoped<IEmbeddingProxyService, EmbeddingProxyService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
@@ -41,6 +46,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope()) {
+    var dbContext = scope.ServiceProvider.GetRequiredService<MediaDbContext>();
+    dbContext.Database.Migrate(); // This applies any pending migrations
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();

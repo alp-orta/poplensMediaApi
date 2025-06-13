@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Pgvector;
 using poplensMediaApi.Contracts;
 using poplensMediaApi.Models;
 using poplensMediaApi.Models.Common;
+using poplensMediaApi.Services;
 
 namespace poplensMediaApi.Controllers {
     [ApiController]
@@ -24,18 +26,20 @@ namespace poplensMediaApi.Controllers {
             return CreatedAtAction(nameof(GetMediaById), new { id = createdMedia.Id }, createdMedia);
         }
 
-        // Get all media items
-        [HttpGet]
-        public async Task<IActionResult> GetAllMedia() {
-            var mediaList = await _mediaService.GetAllMedia();
-            return Ok(mediaList);
-        }
-
-        // Get a single media item by ID
+        // Get a single media item by ID without Embedding
         [Authorize(AuthenticationSchemes = "Bearer")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMediaById(Guid id) {
             var media = await _mediaService.GetMediaById(id);
+            if (media == null) return NotFound();
+            return Ok(media);
+        }
+
+        // Get a single media item by ID
+        [Authorize(AuthenticationSchemes = "Bearer")]
+        [HttpGet("GetMediaWithEmbeddingById/{id}")]
+        public async Task<IActionResult> GetMediaWithEmbeddingById(Guid id) {
+            var media = await _mediaService.GetMediaWithEmbeddingById(id);
             if (media == null) return NotFound();
             return Ok(media);
         }
@@ -129,9 +133,36 @@ namespace poplensMediaApi.Controllers {
             return Ok(pagedResult);
         }
 
+        [Authorize(AuthenticationSchemes = "Bearer")]
+        [HttpPost("Similar")]
+        public async Task<IActionResult> GetSimilarMedia([FromBody] SimilarMediaRequest request) {
+            if (request == null || request.Embedding == null || request.Embedding.Length != 384)
+                return BadRequest("A valid 384-dimension embedding is required.");
+
+            // Convert float[] to Vector
+            var embedding = new Vector(new ReadOnlyMemory<float>(request.Embedding));
+
+            var result = await _mediaService.GetSimilarMediaAsync(
+                embedding,
+                request.Count,
+                request.MediaType,
+                request.ExcludedMediaIds
+            );
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("UpdateMissingMediaEmbeddings")]
+        public async Task<IActionResult> UpdateMissingMediaEmbeddings() {
+            var updatedCount = await _mediaService.UpdateMissingMediaEmbeddingsAsync();
+            return Ok(new { UpdatedCount = updatedCount });
+        }
+
         private bool IsValidType(string type) {
             return type == "film" || type == "book" || type == "game";
         }
+
     }
 
 }
